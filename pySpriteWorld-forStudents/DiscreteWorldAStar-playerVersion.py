@@ -11,7 +11,8 @@ from ontology import Ontology
 from itertools import chain
 import pygame
 import glo
-
+from noeud import Noeud
+import heapq
 import random 
 import numpy as np
 import sys
@@ -27,6 +28,8 @@ import sys
 # ---- ---- ---- ---- ---- ----
 # ---- Main                ----
 # ---- ---- ---- ---- ---- ----
+def manhatan(statePosition, goalPosition):
+    return abs(statePosition[0] - goalPosition[0]) + abs(statePosition[1] - goalPosition[1])
 
 game = Game()
 
@@ -74,7 +77,25 @@ def main():
     #-------------------------------
     # Building the best path with A*
     #-------------------------------
-    
+    noeudInitial = Noeud(list(initStates[0]), 0, None)
+    frontiere = [(noeudInitial.cost + manhatan(noeudInitial.position, goalStates[0]), noeudInitial)]
+    reserve = {}
+    noeudCourant = noeudInitial
+
+    while frontiere != [] and not noeudCourant.position == goalStates[0]:
+        (min_f, noeudCourant) = heapq.heappop(frontiere)
+        if noeudCourant.position == list(goalStates[0]):
+            break
+        next_row = noeudCourant.position[0]
+        next_col = noeudCourant.position[1]
+        if ((next_row,
+             next_col) not in wallStates) and next_row >= 0 and next_row <= 20 and next_col >= 0 and next_col <= 20:
+            if noeudCourant.identifiantNoeud() not in reserve:
+                reserve[noeudCourant.identifiantNoeud()] = noeudCourant.cost
+                nouveauxNoeuds = noeudCourant.expand()
+                for noeud in nouveauxNoeuds:
+                    f = noeud.cost + manhatan(noeud.position, goalStates[0])
+                    heapq.heappush(frontiere, (f, noeud))
 
     
     
@@ -89,7 +110,7 @@ def main():
     row,col = initStates[0]
     #row2,col2 = (5,5)
 
-    for i in range(iterations):
+    """for i in range(iterations):
     
     
         x_inc,y_inc = random.choice([(0,1),(0,-1),(1,0),(-1,0)])
@@ -102,10 +123,16 @@ def main():
 
             col=next_col
             row=next_row
+"""
+    moves = []
+    while noeudCourant != None:
+        moves.insert(0, [noeudCourant.position[0], noeudCourant.position[1]])
+        noeudCourant = noeudCourant.father
+    for i in moves:
+        player.set_rowcol(i[0], i[1])
+        game.mainiteration()
 
-            
-        
-            
+
         # si on a  trouvé l'objet on le ramasse
         if (row,col)==goalStates[0]:
             o = game.player.ramasse(game.layers)
