@@ -12,6 +12,8 @@ from itertools import chain
 import pygame
 import glo
 
+from noeud import Noeud
+import heapq
 import random 
 import numpy as np
 import sys
@@ -22,7 +24,36 @@ import sys
 # ---- ---- ---- ---- ---- ----
 # ---- Main                ----
 # ---- ---- ---- ---- ---- ----
+def manhattan(statePosition, goalPosition):
 
+    return abs(statePosition[0] - goalPosition[0]) + abs(statePosition[1] - goalPosition[1])
+
+def Aetoil(initRow, initCol, endRow, endCol, wallStates):
+
+    noeudInitial = Noeud(([initRow,initCol]), 0, None)
+    goalStates = [endRow,endCol]
+    frontiere = [(noeudInitial.cost + manhattan(noeudInitial.position, goalStates), noeudInitial)]
+    reserve = {}
+    noeudCourant = noeudInitial
+
+
+    while frontiere != [] and not noeudCourant.position == goalStates:
+        (min_f, noeudCourant) = heapq.heappop(frontiere)
+        if noeudCourant.position == goalStates:
+            break
+        next_row = noeudCourant.position[0]
+        next_col = noeudCourant.position[1]
+        if ((next_row,
+             next_col) not in wallStates) and next_row >= 0 and next_row < game.spriteBuilder.rowsize and next_col > 0 and next_col < game.spriteBuilder.colsize:
+            if noeudCourant.identifiantNoeud() not in reserve:
+                reserve[noeudCourant.identifiantNoeud()] = noeudCourant.cost
+                nouveauxNoeuds = noeudCourant.expand()
+                for noeud in nouveauxNoeuds:
+                    f = noeud.cost + manhattan(noeud.position, goalStates)
+                    heapq.heappush(frontiere, (f, noeud))
+
+
+    return noeudCourant
 game = Game()
 
 def init(_boardname=None):
@@ -91,9 +122,30 @@ def main():
 
     print(game.layers['ramassable'])
 
+    initStates = [o.get_rowcol() for o in game.layers['joueur']]
+    print("Init states:", initStates)
 
-    
-    
+    # on localise tous les objets ramassables
+    goalStates = [o.get_rowcol() for o in game.layers['ramassable']]
+    print("Goal states:", goalStates)
+
+
+    movesjoueur1 = Aetoil(initStates[0][0],initStates[0][1],goalStates[0][0],goalStates[0][1], wallStates).trace()
+    movesjoueur2 = Aetoil(initStates[1][0],initStates[1][1],goalStates[1][0],goalStates[1][1], wallStates).trace()
+    print(movesjoueur1)
+    print("=======================")
+    print(movesjoueur2)
+    index = 0
+    for i in range(iterations):
+        for j in range(nbPlayers):
+            if(index < len(movesjoueur1)):
+                players[0].set_rowcol(movesjoueur1[index][0],movesjoueur1[index][1])
+            if((index < len(movesjoueur2))):
+                players[1].set_rowcol(movesjoueur2[index][0], movesjoueur2[index][1])
+            game.mainiteration()
+
+        index += 1
+
     #-------------------------------
     # Boucle principale de déplacements 
     #-------------------------------
@@ -103,7 +155,7 @@ def main():
     
     posPlayers = initStates
 
-    for i in range(iterations):
+    """for i in range(iterations):
         
         for j in range(nbPlayers): # on fait bouger chaque joueur séquentiellement
             row,col = posPlayers[j]
@@ -147,7 +199,16 @@ def main():
                 break
             
     
-    print ("scores:", score)
+    print ("scores:", score)"""
+
+
+
+
+
+
+
+
+
     pygame.quit()
     
         

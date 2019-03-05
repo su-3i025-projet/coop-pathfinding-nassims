@@ -28,7 +28,7 @@ import sys
 # ---- ---- ---- ---- ---- ----
 # ---- Main                ----
 # ---- ---- ---- ---- ---- ----
-def manhatan(statePosition, goalPosition):
+def manhattan(statePosition, goalPosition):
     return abs(statePosition[0] - goalPosition[0]) + abs(statePosition[1] - goalPosition[1])
 
 game = Game()
@@ -78,7 +78,7 @@ def main():
     # Building the best path with A*
     #-------------------------------
     noeudInitial = Noeud(list(initStates[0]), 0, None)
-    frontiere = [(noeudInitial.cost + manhatan(noeudInitial.position, goalStates[0]), noeudInitial)]
+    frontiere = [(noeudInitial.cost + manhattan(noeudInitial.position, goalStates[0]), noeudInitial)]
     reserve = {}
     noeudCourant = noeudInitial
 
@@ -94,7 +94,7 @@ def main():
                 reserve[noeudCourant.identifiantNoeud()] = noeudCourant.cost
                 nouveauxNoeuds = noeudCourant.expand()
                 for noeud in nouveauxNoeuds:
-                    f = noeud.cost + manhatan(noeud.position, goalStates[0])
+                    f = noeud.cost + manhattan(noeud.position, goalStates[0])
                     heapq.heappush(frontiere, (f, noeud))
 
     
